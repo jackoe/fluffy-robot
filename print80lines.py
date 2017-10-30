@@ -1,3 +1,5 @@
+# works with python3 only!
+
 with open('edict2', "r", encoding="euc-jp") as f:
     i = 0
     for line in f:
