@@ -19,6 +19,11 @@ def import_test_data():
                 new_sentence = True
     return kanji_hiragana
 
+def parse_line(line):
+    split_line = line.split(' ')
+    kanji = split_line[0].split(';')
+    katakana = split_line[1][1:-1].split(';')
+    return kanji, katakana
 
 def main():
 
@@ -32,11 +37,10 @@ def main():
 
     # open edict file and put data into a dictionary
     # key = n-gram, value = length of n-gram + (.01*len-1)
+    train_data = None
     with open('edict2', "r", encoding="euc-jp") as f:
-        for line in f:
-
-            pass
-
+        train_data = [parse_line(line) for line in f]
+    print(train_data[:40])
 
     '''parse test sentences:'''
 
