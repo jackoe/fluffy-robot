@@ -10,6 +10,7 @@ def import_test_data():
         kanji = ""
         hiragana = ""
         for line in f:
+            line = line[:-1]
             if new_sentence:
                 kanji = line
                 new_sentence = False
@@ -17,7 +18,7 @@ def import_test_data():
                 hiragana = line
                 kanji_hiragana.append((kanji, hiragana))
                 new_sentence = True
-    return kanji_hiragana
+    return kanji_hiragana[:-1]
 
 def parse_line(line):
     split_line = line.split(' ')
@@ -27,15 +28,16 @@ def parse_line(line):
 
 def main():
 
-    '''create dictionary:'''
+    # '''create dictionary:'''
     # create a katakana to hiragana map (dictionary):
     kana_dict = {}
-    with open('katakana_dict.txt', "r", encoding="euc-jp") as f:
-        for line in f:
-            new_data = line.split()
-            kana_dict[new_data[0]] = new_data[1]
+    # with open('katakana_dict.txt', "r", encoding="euc-jp") as f:
+    #     for line in f:
+    #         new_data = line.split()
+    #         kana_dict[new_data[0]] = new_data[1]
 
     # open edict file and put data into a dictionary
+    i = 0
     # key = n-gram, value = length of n-gram + (.01*len-1)
     train_data = None
     with open('edict2', "r", encoding="euc-jp") as f:
@@ -43,9 +45,9 @@ def main():
     print(train_data[:40])
 
     '''parse test sentences:'''
-
-    print(import_test_data)
     # import test data
+    test_sentences = import_test_data()
+
 
     # iterate through test sentences:
 
