@@ -23,14 +23,17 @@ def tuple_string_add(t1 ,t2):
 def tuple_list_flatten(l):
     return reduce(tuple_string_add, l, ("", ""))
 
-def grab_soup_kanji_katakana(soup):
-    # if the paragraph tag is a string, it's just an empty string
+def grab_soup_kanji_hiragana(soup):
+    #if the paragraph tag is a string, it's just an empty string
     if type(soup) == str:
         return soup, soup
+    #if it's a navigable string, it's just hiragana on its own
     elif type(soup) == bs4.element.NavigableString:
-        katakana = str(soup)
-        return katakana, katakana
+        hiragana = str(soup)
+        return hiragana, hiragana
     else:
+    #otherwise, it's a ruby tag, and we can grab the text
+    #the first is the kanji, the second is hiragana
         if len(list(soup.strings)) == 1:
             soup_str = list(soup.strings)[0]
             return (soup_str, soup_str)
@@ -39,10 +42,10 @@ def grab_soup_kanji_katakana(soup):
 # outputs tuple of strings
 # (kanji_str, hirigana_str)
 def parse_paragraph(paragraph_soup):
-    words = [grab_soup_kanji_katakana(word) for word in paragraph_soup]
+    words = [grab_soup_kanji_hiragana(word) for word in paragraph_soup]
     return (tuple_list_flatten(words))
 
-
+# given the html, returns the sentences in the webpage
 def grab_sentences(input_html):
     soup = BeautifulSoup(input_html, 'html.parser')
     soup = soup.find(id="newsarticle")
@@ -57,8 +60,11 @@ urls = sys.stdin.read().splitlines()
 # GET request howto from the following
 # https://stackoverflow.com/questions/645312/what-is-the-quickest-way-to-http-get-in-python
 parsed_pages = [grab_sentences(urllib.request.urlopen(url).read()) for url in urls]
-(all_kanji, all_katakana) = (tuple_list_flatten(parsed_pages))
+(all_kanji, all_hiragana) = (tuple_list_flatten(parsed_pages))
 all_kanji    =    all_kanji.replace('\n', '').split('。')
-all_katakana = all_katakana.replace('\n', '').split('。')
+all_hiragana = all_hiragana.replace('\n', '').split('。')
 
-print(all_kanji, all_katakana)
+output_sentences = zip(all_kanji, all_hiragana)
+with open('kanji_hiragana.txt', 'w') as f:
+    for kanji, hiragana in output_sentences:
+        f.write(kanji + '\n' + hiragana + '\n')
