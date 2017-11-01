@@ -3,6 +3,22 @@ Jack Wines & Tegan Wilson
 Natural Language Processing
 Blake Howald, 3a
 '''
+def import_test_data():
+    kanji_hiragana = []
+    with open('kanji_hiragana.txt') as f:
+        new_sentence = True
+        kanji = ""
+        hiragana = ""
+        for line in f:
+            if new_sentence:
+                kanji = line
+                new_sentence = False
+            else:
+                hiragana = line
+                kanji_hiragana.append((kanji, hiragana))
+                new_sentence = True
+    return kanji_hiragana
+
 
 def main():
 
@@ -10,20 +26,21 @@ def main():
     # create a katakana to hiragana map (dictionary):
     kana_dict = {}
     with open('katakana_dict.txt', "r", encoding="euc-jp") as f:
-        for line in if:
+        for line in f:
             new_data = line.split()
             kana_dict[new_data[0]] = new_data[1]
 
     # open edict file and put data into a dictionary
     # key = n-gram, value = length of n-gram + (.01*len-1)
     with open('edict2', "r", encoding="euc-jp") as f:
-        for line in if:
+        for line in f:
 
             pass
 
 
     '''parse test sentences:'''
 
+    print(import_test_data)
     # import test data
 
     # iterate through test sentences:
