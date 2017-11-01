@@ -32,7 +32,21 @@ def main():
 
         # assign values to each vertex (or edges if necessary)
 
-        # traverse graph to find longest path (or shortest if needed?)
+        # traverse graph to find longest path:
+
+            # Find set of vertices with no incoming edges, S
+
+            # while S not empty:
+
+            # pick v within S
+
+            # take v out of S and place v into L (order solution list)
+
+            # for all w st. vw is a directed edge from v to w:
+
+                # "delete" vw from the set of edges
+
+                # if w has no other incoming edges, add w to S
 
         # backtrack to get max value parse of sentence
 
