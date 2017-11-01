@@ -5,6 +5,7 @@ import bs4
 # pip3 install beautifulsoup4
 import sys
 
+# (a, b), (c, d) -> (a+c, b + d)
 def tuple_string_add(t1 ,t2):
     (y1, y2) = ("", "")
     if len(t2) == 2:
