@@ -37,7 +37,6 @@ def main():
     #         kana_dict[new_data[0]] = new_data[1]
 
     # open edict file and put data into a dictionary
-    i = 0
     # key = n-gram, value = length of n-gram + (.01*len-1)
     train_data = {}
     with open('edict2', "r", encoding="euc-jp") as f:
