@@ -39,10 +39,12 @@ def main():
     # open edict file and put data into a dictionary
     i = 0
     # key = n-gram, value = length of n-gram + (.01*len-1)
-    train_data = None
+    train_data = {}
     with open('edict2', "r", encoding="euc-jp") as f:
-        train_data = [parse_line(line) for line in f]
-    print(train_data[:40])
+        for line in f:
+            kanji_l, hiragana_l = parse_line(line.replace('(P)', ''))
+            for kanji in kanji_l:
+                train_data[kanji] = hiragana_l
 
     '''parse test sentences:'''
     # import test data
