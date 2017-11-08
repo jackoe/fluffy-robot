@@ -21,10 +21,19 @@ def import_test_data():
     return kanji_hiragana[:-1]
 
 def parse_line(line):
+    line = line.replace('(P)', '')
     split_line = line.split(' ')
     kanji = split_line[0].split(';')
-    katakana = split_line[1][1:-1].split(';')
-    return kanji, katakana
+
+    hiragana = split_line[1]
+    if hiragana[:2] == '/(':
+        return None
+    elif hiragana[0] == '[' and hiragana[-1] == ']':
+        hiragana = hiragana[1:-1]
+    else:
+        print('err', hiragana, line)
+    hiragana = hiragana.split(';')
+    return kanji, hiragana
 
 def main():
 
@@ -41,9 +50,13 @@ def main():
     train_data = {}
     with open('edict2', "r", encoding="euc-jp") as f:
         for line in f:
-            kanji_l, hiragana_l = parse_line(line.replace('(P)', ''))
+            parsed_line = parse_line(line)
+            if parsed_line == None:
+                continue
+            kanji_l, hiragana_l = parsed_line
             for kanji in kanji_l:
                 train_data[kanji] = hiragana_l
+    print(train_data)
 
     '''parse test sentences:'''
     # import test data
@@ -51,6 +64,8 @@ def main():
 
 
     # iterate through test sentences:
+    for sentence in test_sentences:
+        pass
 
         # build graph for the test sentence
 
