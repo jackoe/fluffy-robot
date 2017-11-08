@@ -66,12 +66,12 @@ def main():
     '''parse test sentences:'''
     # import test data
     test_sentences = import_test_data()
-    i = 0
+    k = 0
 
     # iterate through test sentences:
     for test_sent in test_sentences:
-        i += 1
-        if i > 1:
+        k += 1
+        if k > 1:
             break
 
         sent = test_sent[0]
@@ -92,13 +92,10 @@ def main():
                         value = 0
                     # add edges if value isn't 0
                     if value > 0:
-                        if i == 1:
-                            for l in range(1,10):
-                                D.add_edge((i,j),'finish',weight=value)
-                        else:
-                            for l in range(1,10):
-                                D.add_edge((i,j),(l,j-i), weight=value)
-
+                        for l in range(1,10):
+                            to_node = 'finish' if i == 1 else (l,j-i)
+                            D.add_edge((i,j), to_node, weight=value)
+            
             D.add_edge('start', (i,len(sent)), weight=0)
 
         # traverse graph to find longest path:
