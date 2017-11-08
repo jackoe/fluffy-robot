@@ -180,8 +180,7 @@ def translate(sent, D, train_data):
             output = kana + output
     return output
 
-def main():
-
+def get_train_data():
     # '''create dictionary:'''
     # create a katakana/hiragana to hiragana map (dictionary):
     train_data = {}
@@ -204,6 +203,11 @@ def main():
             for kanji in kanji_l:
                 value = len(kanji) + (len(kanji)-1) * .01
                 train_data[kanji] = [hiragana_l, value]
+    return train_data
+
+def main():
+    #import training data
+    train_data = get_train_data()
 
     '''parse test sentences:'''
     # import test data
@@ -215,6 +219,9 @@ def main():
     for sent, answ in test_sentences:
 
         D = build_sent_graph(sent, train_data)
+        if(not done_visual):
+             nx.drawing.nx_pylab.draw(D)
+
         output = translate(sent, D, train_data)
 
         # compare output and answ to determine accuracy
@@ -227,6 +234,6 @@ def main():
 
 
 
-
+done_visual = False
 if __name__ == "__main__":
     main()
