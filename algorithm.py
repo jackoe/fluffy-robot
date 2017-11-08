@@ -84,8 +84,7 @@ def main():
 
         sent = test_sent[0]
         answ = test_sent[1]
-
-        print(sent)
+        print("\n","Sent:",sent)
 
         # build graph for the test sentence: graph is 9 by len(sent)
         D = nx.DiGraph()
@@ -95,15 +94,15 @@ def main():
         # if vertex not in graph, adds vertex
         for i in range(1,10):
             for j in range(0,len(sent)):
-                if j-i >= 0: # is it possible to find i-gram ending at j
+                if j-i >= -1: # is it possible to find i-gram ending at j
                     if sent[j-i+1:j+1] in train_data:
                         value = float(train_data[sent[j-i+1:j+1]][1]) # associated weight
-                        print(i,j,sent[j-i+1:j+1],value)
+                        # print(i,j,sent[j-i+1:j+1],value)
                     else:
                         value = 0
                     # add edges if value isn't 0
                     for l in range(1,10):
-                        to_node = 'finish' if j-i<=0 else (l,j-i)
+                        to_node = 'finish' if j-i<0 else (l,j-i)
                         D.add_edge((i,j), to_node, weight=value)
 
             D.add_edge('start', (i,len(sent)-1), weight=0)
@@ -133,7 +132,7 @@ def main():
                 # if w has no other incoming edges, add w to S
                 if len(Dgraph.in_edges(e[1])) == 0:
                     S.append(e[1])
-        print("Topological ordering:",L)
+        # print("Topological ordering:",L)
 
         # iterate through L to get path lengths
         backtrack = {}
@@ -156,10 +155,10 @@ def main():
                         if curr_path < path_length:
                             curr_path = path_length
                             backtrack[v] = [path_length, u]
-            if v == 'finish':
+            if v == 'finish': # in this case we're done
                 break
 
-        print(backtrack)
+        # print(backtrack)
         # backtrack to get max value parse of sentence
         done = False
         curr_v = 'finish'
@@ -173,12 +172,27 @@ def main():
             path.append(next_v)
             curr_v = next_v
         path.reverse()
-        print(path)
+        # print(path)
 
         # use max path to parse sent and dictionary to get reading
-        # do something for kanji that weren't found!
+        # do something for kanji that weren't found! (probably leave them be)
+        output = ""
+        for node in path:
+            # print(node)
+            if not node == 'finish' and not node == 'start':
+                i = node[0]
+                j = node[1]
+                gram = sent[j-i+1:j+1]
+                if gram in train_data:
+                    kana = train_data[gram][0][0]
+                else:
+                    kana = gram
+                # print(gram,kana)
+                output = kana + output
 
-    # examine output v. answer to determine accuracy
+        # examine output v. answer to determine accuracy
+        print("Output:",output)
+        print("Answer:",answ)
 
     # print some of the worst offenders for closer examination
 
