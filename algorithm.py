@@ -95,20 +95,19 @@ def main():
                         for l in range(1,10):
                             to_node = 'finish' if i == 1 else (l,j-i)
                             D.add_edge((i,j), to_node, weight=value)
-            
+
             D.add_edge('start', (i,len(sent)), weight=0)
-        
-        
+
+
         Dgraph = nx.DiGraph.copy(D)
         # remove edges coming out of start
         for edge in list(Dgraph.edges('start')):
             Dgraph.remove_edge(edge[0], edge[1])
-        
+
         # traverse graph to find longest path:
         # Find set of vertices with no incoming edges, S
         S = [v for v in D.nodes() if len(D.in_edges(v)) == 0 and v != 'start']
         L = ['start']
-        
         # while S not empty:
         while len(S) > 0:
             # pick v within S
@@ -117,12 +116,13 @@ def main():
             L.append(v)
             # for all w st. vw is a directed edge from v to w:
             edges = list(Dgraph.edges(v))
-            for v, w in edges:
+            for e in edges:
                 # "delete" vw from the set of edges
-                Dgraph.remove_edge(v,w)
+                Dgraph.remove_edge(e[0],e[1])
                 # if w has no other incoming edges, add w to S
-                if len(Dgraph.in_edges()) == 0:
-                    S.append(w)
+                if len(Dgraph.in_edges(e[1])) == 0:
+                    S.append(e[1])
+        # print("Topological ordering:",L)
 
         # iterate through L to get path lengths
 
