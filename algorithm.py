@@ -5,8 +5,6 @@ Blake Howald, 3a
 '''
 
 import networkx as nx
-import matplotlib
-from matplotlib import pyplot as plt
 
 def import_test_data():
     kanji_hiragana = []
@@ -97,7 +95,6 @@ def main():
                 if j-i >= -1: # is it possible to find i-gram ending at j
                     if sent[j-i+1:j+1] in train_data:
                         value = float(train_data[sent[j-i+1:j+1]][1]) # associated weight
-                        # print(i,j,sent[j-i+1:j+1],value)
                     else:
                         value = 0
                     # add edges if value isn't 0
@@ -106,8 +103,6 @@ def main():
                         D.add_edge((i,j), to_node, weight=value)
 
             D.add_edge('start', (i,len(sent)-1), weight=0)
-
-        # plt.show(nx.draw(D))
 
         Dgraph = nx.DiGraph.copy(D)
         # remove edges coming out of start
@@ -132,7 +127,6 @@ def main():
                 # if w has no other incoming edges, add w to S
                 if len(Dgraph.in_edges(e[1])) == 0:
                     S.append(e[1])
-        # print("Topological ordering:",L)
 
         # iterate through L to get path lengths
         backtrack = {}
@@ -142,7 +136,6 @@ def main():
                 backtrack[v] = [0]
             else:
                 edges = list(D.in_edges(v))
-                # print('\n',v,'  ',edges)
                 backtrack[v] = [float('-inf'), 'start']
                 if len(edges) > 0:
                     curr_path = backtrack[v][0]
@@ -151,20 +144,17 @@ def main():
                         weight = data['weight']
                         u = e[0]
                         path_length = backtrack[u][0] + weight
-                        # print(weight,path_length)
                         if curr_path < path_length:
                             curr_path = path_length
                             backtrack[v] = [path_length, u]
             if v == 'finish': # in this case we're done
                 break
 
-        # print(backtrack)
         # backtrack to get max value parse of sentence
         done = False
         curr_v = 'finish'
         path = ['finish']
         while not done:
-            # print(path)
             if curr_v == 'start':
                 done = True
                 break
@@ -172,13 +162,11 @@ def main():
             path.append(next_v)
             curr_v = next_v
         path.reverse()
-        # print(path)
 
         # use max path to parse sent and dictionary to get reading
         # do something for kanji that weren't found! (probably leave them be)
         output = ""
         for node in path:
-            # print(node)
             if not node == 'finish' and not node == 'start':
                 i = node[0]
                 j = node[1]
@@ -187,12 +175,11 @@ def main():
                     kana = train_data[gram][0][0]
                 else:
                     kana = gram
-                # print(gram,kana)
                 output = kana + output
 
-        # examine output v. answer to determine accuracy
         print("Output:",output)
         print("Answer:",answ)
+        # compare output and answ to determine accuracy
 
     # print some of the worst offenders for closer examination
 
