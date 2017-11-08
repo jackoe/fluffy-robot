@@ -21,9 +21,11 @@ def pretty_print(lines):
 
 def output_result_statistics(sent_translation):
     edit_dists = [x[-1] for x in sent_translation]
-    print(edit_dists)
+    print("avg:", sum(edit_dists) / len(edit_dists))
+    print("median", edit_dists[len(edit_dists) // 2])
+    print("fraction perfect", edit_dists.count(0) / len(edit_dists))
     histogram_data = [go.Histogram(x = edit_dists)]
-    plot.plot(histogram_data, filename = "histogram")
+    plot.plot(histogram_data, filename = "histogram.html")
     print("bottom 5:")
     pretty_print(sent_translation[:5])
     print("top 5:")
@@ -219,8 +221,6 @@ def main():
     for sent, answ in test_sentences:
 
         D = build_sent_graph(sent, train_data)
-        if(not done_visual):
-             nx.drawing.nx_pylab.draw(D)
 
         output = translate(sent, D, train_data)
 
