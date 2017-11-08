@@ -60,7 +60,7 @@ def main():
                 continue
             kanji_l, hiragana_l = parsed_line
             for kanji in kanji_l:
-                value = len(kanji) + (len(kanji)-1)*.01
+                value = len(kanji) + (len(kanji)-1) * .01
                 train_data[kanji] = [hiragana_l, value]
 
     '''parse test sentences:'''
