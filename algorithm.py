@@ -98,15 +98,17 @@ def main():
             
             D.add_edge('start', (i,len(sent)), weight=0)
         
+        
+        Dgraph = nx.DiGraph.copy(D)
         # remove edges coming out of start
-        for edge in Dgraph.edges('start'):
-            Dgraph.remove_edge(edge)
+        for edge in list(Dgraph.edges('start')):
+            Dgraph.remove_edge(edge[0], edge[1])
         
         # traverse graph to find longest path:
         # Find set of vertices with no incoming edges, S
-        S = [v for v in D.nodes() if len(v.in_edges()) == 0 and v != 'start']
+        S = [v for v in D.nodes() if len(D.in_edges(v)) == 0 and v != 'start']
         L = ['start']
-        Dgraph = nx.copy(D)
+        
         # while S not empty:
         while len(S) > 0:
             # pick v within S
@@ -114,12 +116,12 @@ def main():
             # take v out of S and place v into L (order solution list)
             L.append(v)
             # for all w st. vw is a directed edge from v to w:
-            edges = Dgraph.edges(v)
+            edges = list(Dgraph.edges(v))
             for v, w in edges:
                 # "delete" vw from the set of edges
-                D.remove_edge(v,w)
+                Dgraph.remove_edge(v,w)
                 # if w has no other incoming edges, add w to S
-                if len(w.in_edges()) == 0:
+                if len(Dgraph.in_edges()) == 0:
                     S.append(w)
 
         # iterate through L to get path lengths
