@@ -5,6 +5,8 @@ Blake Howald, 3a
 '''
 
 import networkx as nx
+import matplotlib
+from matplotlib import pyplot as plt
 
 def import_test_data():
     kanji_hiragana = []
@@ -37,6 +39,12 @@ def parse_line(line):
         print('err', hiragana, line)
     hiragana = hiragana.split(';')
     return kanji, hiragana
+
+def set_difference(l1, l2):
+    s1 = set(l1)
+    s2 = set(l2)
+    diff = s1.difference(s2)
+    return list(diff)
 
 def main():
 
@@ -77,6 +85,8 @@ def main():
         sent = test_sent[0]
         answ = test_sent[1]
 
+        print(sent)
+
         # build graph for the test sentence: graph is 9 by len(sent)
         D = nx.DiGraph()
 
@@ -86,18 +96,19 @@ def main():
         for i in range(1,10):
             for j in range(0,len(sent)):
                 if j-i >= 0: # is it possible to find i-gram ending at j
-                    if sent[j-i:j+1] in train_data:
-                        value = train_data[sent[j-i:j+1]][1] # associated weight
+                    if sent[j-i+1:j+1] in train_data:
+                        value = float(train_data[sent[j-i+1:j+1]][1]) # associated weight
+                        print(i,j,sent[j-i+1:j+1],value)
                     else:
                         value = 0
                     # add edges if value isn't 0
-                    if value > 0:
-                        for l in range(1,10):
-                            to_node = 'finish' if i == 1 else (l,j-i)
-                            D.add_edge((i,j), to_node, weight=value)
+                    for l in range(1,10):
+                        to_node = 'finish' if j-i<=0 else (l,j-i)
+                        D.add_edge((i,j), to_node, weight=value)
 
-            D.add_edge('start', (i,len(sent)), weight=0)
+            D.add_edge('start', (i,len(sent)-1), weight=0)
 
+        # plt.show(nx.draw(D))
 
         Dgraph = nx.DiGraph.copy(D)
         # remove edges coming out of start
@@ -106,7 +117,7 @@ def main():
 
         # traverse graph to find longest path:
         # Find set of vertices with no incoming edges, S
-        S = [v for v in D.nodes() if len(D.in_edges(v)) == 0 and v != 'start']
+        S = [v for v in Dgraph.nodes() if len(Dgraph.in_edges(v)) == 0 and v != 'start']
         L = ['start']
         # while S not empty:
         while len(S) > 0:
@@ -122,14 +133,50 @@ def main():
                 # if w has no other incoming edges, add w to S
                 if len(Dgraph.in_edges(e[1])) == 0:
                     S.append(e[1])
-        # print("Topological ordering:",L)
+        print("Topological ordering:",L)
 
         # iterate through L to get path lengths
+        backtrack = {}
+        for i in range(0,len(L)):
+            v = L[i]
+            if i == 0:
+                backtrack[v] = [0]
+            else:
+                edges = list(D.in_edges(v))
+                # print('\n',v,'  ',edges)
+                backtrack[v] = [float('-inf'), 'start']
+                if len(edges) > 0:
+                    curr_path = backtrack[v][0]
+                    for e in edges:
+                        data = D.get_edge_data(*e)
+                        weight = data['weight']
+                        u = e[0]
+                        path_length = backtrack[u][0] + weight
+                        # print(weight,path_length)
+                        if curr_path < path_length:
+                            curr_path = path_length
+                            backtrack[v] = [path_length, u]
+            if v == 'finish':
+                break
 
+        print(backtrack)
         # backtrack to get max value parse of sentence
+        done = False
+        curr_v = 'finish'
+        path = ['finish']
+        while not done:
+            # print(path)
+            if curr_v == 'start':
+                done = True
+                break
+            next_v = backtrack[curr_v][1]
+            path.append(next_v)
+            curr_v = next_v
+        path.reverse()
+        print(path)
 
-        # use max value parse and dictionary to get reading
-        # do something for kanji that aren't found!
+        # use max path to parse sent and dictionary to get reading
+        # do something for kanji that weren't found!
 
     # examine output v. answer to determine accuracy
 
