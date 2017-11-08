@@ -100,15 +100,14 @@ def main():
 
         # traverse graph to find longest path:
         # Find set of vertices with no incoming edges, S
-        S = {v for v in D.nodes() if len(v.in_edges()) == 0}
+        S = [v for v in D.nodes() if len(v.in_edges()) == 0]
         L = []
         Dgraph = nx.copy(D)
         # while S not empty:
         while len(S) > 0:
             # pick v within S
-            v = next((iter(S))
+            v = S.pop()
             # take v out of S and place v into L (order solution list)
-            S.remove(v)
             L.append(v)
             # for all w st. vw is a directed edge from v to w:
             edges = Dgraph.edges(v)
@@ -117,7 +116,7 @@ def main():
                 D.remove_edge(v,w)
                 # if w has no other incoming edges, add w to S
                 if len(w.in_edges()) == 0:
-                    S.add(w)
+                    S.append(w)
 
         # iterate through L to get path lengths
 
