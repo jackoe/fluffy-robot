@@ -5,6 +5,7 @@ Blake Howald, 3a
 '''
 
 import networkx as nx
+import tabulate
 
 def import_test_data():
     kanji_hiragana = []
@@ -44,6 +45,118 @@ def set_difference(l1, l2):
     diff = s1.difference(s2)
     return list(diff)
 
+def edit_distance(s1, s2, dp_table):
+    if len(s1) == 0 or len(s2) == 0:
+        return len(s1) + len(s2)
+    if (s1, s2) in dp_table:
+        return dp_table[(s1, s2)]
+    if s1[0] == s2[0]:
+        return edit_distance(s1[1:], s2[1:], dp_table)
+    else:
+        result = min(edit_distance(s1[1:], s2,    dp_table) + 1,
+                     edit_distance(s1, s2[1:],    dp_table) + 1,
+                     edit_distance(s1[1:], s2[1:],dp_table) + 2)
+        dp_table[(s1, s2)] = result
+        return result
+
+def build_sent_graph(sent, train_data):
+    # build graph for the test sentence: graph is 9 by len(sent)
+    D = nx.DiGraph()
+
+    # assign values to each vertex (actually to each edge leaving the vertex)
+    # vertex (i,j) -> i-gram ending at character j
+    # if vertex not in graph, adds vertex
+    for i in range(1,10):
+        for j in range(0,len(sent)):
+            if j-i >= -1: # is it possible to find i-gram ending at j
+                if sent[j-i+1:j+1] in train_data:
+                    value = float(train_data[sent[j-i+1:j+1]][1]) # associated weight
+                else:
+                    value = 0
+                # add edges if value isn't 0
+                for l in range(1,10):
+                    to_node = 'finish' if j-i<0 else (l,j-i)
+                    D.add_edge((i,j), to_node, weight=value)
+
+        D.add_edge('start', (i,len(sent)-1), weight=0)
+    return D
+
+
+def translate(sent, D, train_data):
+    Dgraph = nx.DiGraph.copy(D)
+    # remove edges coming out of start
+    for edge in list(Dgraph.edges('start')):
+        Dgraph.remove_edge(edge[0], edge[1])
+
+    # traverse graph to find longest path:
+    # Find set of vertices with no incoming edges, S
+    S = [v for v in Dgraph.nodes() if len(Dgraph.in_edges(v)) == 0 and v != 'start']
+    L = ['start']
+    # while S not empty:
+    while len(S) > 0:
+        # pick v within S
+        v = S.pop()
+        # take v out of S and place v into L (order solution list)
+        L.append(v)
+        # for all w st. vw is a directed edge from v to w:
+        edges = list(Dgraph.edges(v))
+        for e in edges:
+            # "delete" vw from the set of edges
+            Dgraph.remove_edge(e[0],e[1])
+            # if w has no other incoming edges, add w to S
+            if len(Dgraph.in_edges(e[1])) == 0:
+                S.append(e[1])
+
+    # iterate through L to get path lengths
+    backtrack = {}
+    for i in range(0,len(L)):
+        v = L[i]
+        if i == 0:
+            backtrack[v] = [0]
+        else:
+            edges = list(D.in_edges(v))
+            backtrack[v] = [float('-inf'), 'start']
+            if len(edges) > 0:
+                curr_path = backtrack[v][0]
+                for e in edges:
+                    data = D.get_edge_data(*e)
+                    weight = data['weight']
+                    u = e[0]
+                    path_length = backtrack[u][0] + weight
+                    if curr_path < path_length:
+                        curr_path = path_length
+                        backtrack[v] = [path_length, u]
+        if v == 'finish': # in this case we're done
+            break
+
+    # backtrack to get max value parse of sentence
+    done = False
+    curr_v = 'finish'
+    path = ['finish']
+    while not done:
+        if curr_v == 'start':
+            done = True
+            break
+        next_v = backtrack[curr_v][1]
+        path.append(next_v)
+        curr_v = next_v
+    path.reverse()
+
+    # use max path to parse sent and dictionary to get reading
+    # do something for kanji that weren't found! (probably leave them be)
+    output = ""
+    for node in path:
+        if not node == 'finish' and not node == 'start':
+            i = node[0]
+            j = node[1]
+            gram = sent[j-i+1:j+1]
+            if gram in train_data:
+                kana = train_data[gram][0][0]
+            else:
+                kana = gram
+            output = kana + output
+    return output
+
 def main():
 
     # '''create dictionary:'''
@@ -72,116 +185,31 @@ def main():
     '''parse test sentences:'''
     # import test data
     test_sentences = import_test_data()
-    k = 0
+
+    sent_translation = []
 
     # iterate through test sentences:
-    for test_sent in test_sentences:
-        k += 1
-        if k > 1:
-            break
+    for sent, answ in test_sentences:
 
-        sent = test_sent[0]
-        answ = test_sent[1]
-        print("\n","Sent:",sent)
+        D = build_sent_graph(sent, train_data)
+        output = translate(sent, D, train_data)
 
-        # build graph for the test sentence: graph is 9 by len(sent)
-        D = nx.DiGraph()
-
-        # assign values to each vertex (actually to each edge leaving the vertex)
-        # vertex (i,j) -> i-gram ending at character j
-        # if vertex not in graph, adds vertex
-        for i in range(1,10):
-            for j in range(0,len(sent)):
-                if j-i >= -1: # is it possible to find i-gram ending at j
-                    if sent[j-i+1:j+1] in train_data:
-                        value = float(train_data[sent[j-i+1:j+1]][1]) # associated weight
-                    else:
-                        value = 0
-                    # add edges if value isn't 0
-                    for l in range(1,10):
-                        to_node = 'finish' if j-i<0 else (l,j-i)
-                        D.add_edge((i,j), to_node, weight=value)
-
-            D.add_edge('start', (i,len(sent)-1), weight=0)
-
-        Dgraph = nx.DiGraph.copy(D)
-        # remove edges coming out of start
-        for edge in list(Dgraph.edges('start')):
-            Dgraph.remove_edge(edge[0], edge[1])
-
-        # traverse graph to find longest path:
-        # Find set of vertices with no incoming edges, S
-        S = [v for v in Dgraph.nodes() if len(Dgraph.in_edges(v)) == 0 and v != 'start']
-        L = ['start']
-        # while S not empty:
-        while len(S) > 0:
-            # pick v within S
-            v = S.pop()
-            # take v out of S and place v into L (order solution list)
-            L.append(v)
-            # for all w st. vw is a directed edge from v to w:
-            edges = list(Dgraph.edges(v))
-            for e in edges:
-                # "delete" vw from the set of edges
-                Dgraph.remove_edge(e[0],e[1])
-                # if w has no other incoming edges, add w to S
-                if len(Dgraph.in_edges(e[1])) == 0:
-                    S.append(e[1])
-
-        # iterate through L to get path lengths
-        backtrack = {}
-        for i in range(0,len(L)):
-            v = L[i]
-            if i == 0:
-                backtrack[v] = [0]
-            else:
-                edges = list(D.in_edges(v))
-                backtrack[v] = [float('-inf'), 'start']
-                if len(edges) > 0:
-                    curr_path = backtrack[v][0]
-                    for e in edges:
-                        data = D.get_edge_data(*e)
-                        weight = data['weight']
-                        u = e[0]
-                        path_length = backtrack[u][0] + weight
-                        if curr_path < path_length:
-                            curr_path = path_length
-                            backtrack[v] = [path_length, u]
-            if v == 'finish': # in this case we're done
-                break
-
-        # backtrack to get max value parse of sentence
-        done = False
-        curr_v = 'finish'
-        path = ['finish']
-        while not done:
-            if curr_v == 'start':
-                done = True
-                break
-            next_v = backtrack[curr_v][1]
-            path.append(next_v)
-            curr_v = next_v
-        path.reverse()
-
-        # use max path to parse sent and dictionary to get reading
-        # do something for kanji that weren't found! (probably leave them be)
-        output = ""
-        for node in path:
-            if not node == 'finish' and not node == 'start':
-                i = node[0]
-                j = node[1]
-                gram = sent[j-i+1:j+1]
-                if gram in train_data:
-                    kana = train_data[gram][0][0]
-                else:
-                    kana = gram
-                output = kana + output
-
-        print("Output:",output)
-        print("Answer:",answ)
         # compare output and answ to determine accuracy
+        edit_dist = edit_distance(output,answ,{})
+        sent_translation.append((sent,output,answ,edit_dist))
 
     # print some of the worst offenders for closer examination
+    sent_translation.sort(key = lambda x: x[3], reverse = True)
+    for sent, output, answ, edit_dist in sent_translation:
+        print(sent)
+        print(output)
+        print(answ)
+        print(edit_dist)
+        print('-----')
+    # print(tabulate.tabulate([(x, y) for x, _, _, y in sent_translation], headers = ("sentence", "edit distance")))
+
+
+
 
 
 if __name__ == "__main__":
