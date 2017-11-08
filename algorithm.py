@@ -6,6 +6,29 @@ Blake Howald, 3a
 
 import networkx as nx
 import tabulate
+import plotly.offline as plot
+import plotly.graph_objs as go
+
+def pretty_print(lines):
+    for line in lines:
+        sent, output, answ, edit_dist = line
+        print(sent)
+        print(output)
+        print(answ)
+        print(edit_dist)
+        print('-------------')
+
+
+def output_result_statistics(sent_translation):
+    edit_dists = [x[-1] for x in sent_translation]
+    print(edit_dists)
+    histogram_data = [go.Histogram(x = edit_dists)]
+    plot.plot(histogram_data, filename = "histogram")
+    print("bottom 5:")
+    pretty_print(sent_translation[:5])
+    print("top 5:")
+    pretty_print(sent_translation[-5:])
+    
 
 def import_test_data():
     kanji_hiragana = []
@@ -200,14 +223,7 @@ def main():
 
     # print some of the worst offenders for closer examination
     sent_translation.sort(key = lambda x: x[3], reverse = True)
-    for sent, output, answ, edit_dist in sent_translation:
-        print(sent)
-        print(output)
-        print(answ)
-        print(edit_dist)
-        print('-----')
-    # print(tabulate.tabulate([(x, y) for x, _, _, y in sent_translation], headers = ("sentence", "edit distance")))
-
+    output_result_statistics(sent_translation)
 
 
 
