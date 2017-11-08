@@ -97,11 +97,15 @@ def main():
                             D.add_edge((i,j), to_node, weight=value)
             
             D.add_edge('start', (i,len(sent)), weight=0)
-
+        
+        # remove edges coming out of start
+        for edge in Dgraph.edges('start'):
+            Dgraph.remove_edge(edge)
+        
         # traverse graph to find longest path:
         # Find set of vertices with no incoming edges, S
-        S = [v for v in D.nodes() if len(v.in_edges()) == 0]
-        L = [start]
+        S = [v for v in D.nodes() if len(v.in_edges()) == 0 and v != 'start']
+        L = ['start']
         Dgraph = nx.copy(D)
         # while S not empty:
         while len(S) > 0:
