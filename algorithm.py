@@ -9,6 +9,9 @@ import tabulate
 import plotly.offline as plot
 import plotly.graph_objs as go
 
+'''
+Summary: something Jack did to make it print things nicely
+'''
 def pretty_print(lines):
     for line in lines:
         sent, output, answ, edit_dist = line
@@ -18,7 +21,9 @@ def pretty_print(lines):
         print(edit_dist)
         print('-------------')
 
-
+'''
+Summary: Something Jack did to make it print relevant results to terminal
+'''
 def output_result_statistics(sent_translation):
     edit_dists = [x[-1] for x in sent_translation]
     print("avg:", sum(edit_dists) / len(edit_dists))
@@ -30,8 +35,11 @@ def output_result_statistics(sent_translation):
     pretty_print(sent_translation[:5])
     print("top 5:")
     pretty_print(sent_translation[-5:])
-    
 
+'''
+Summary: imports the test data and returns it in a list of tupled test and
+    answer sentences
+'''
 def import_test_data():
     kanji_hiragana = []
     with open('kanji_hiragana.txt',"r") as f:
@@ -49,6 +57,9 @@ def import_test_data():
                 new_sentence = True
     return kanji_hiragana[:-1]
 
+'''
+Summary:
+'''
 def parse_line(line):
     line = line.replace('(P)', '')
     split_line = line.split(' ')
@@ -64,12 +75,18 @@ def parse_line(line):
     hiragana = hiragana.split(';')
     return kanji, hiragana
 
+'''
+Summary:
+'''
 def set_difference(l1, l2):
     s1 = set(l1)
     s2 = set(l2)
     diff = s1.difference(s2)
     return list(diff)
 
+'''
+Summary:
+'''
 def edit_distance(s1, s2, dp_table):
     if len(s1) == 0 or len(s2) == 0:
         return len(s1) + len(s2)
@@ -84,6 +101,10 @@ def edit_distance(s1, s2, dp_table):
         dp_table[(s1, s2)] = result
         return result
 
+'''
+Summary: Builds and return the graph associated with a gievn test sentence, will
+    be used to run longest path on and find word boundaries later on.
+'''
 def build_sent_graph(sent, train_data):
     # build graph for the test sentence: graph is 9 by len(sent)
     D = nx.DiGraph()
@@ -106,7 +127,65 @@ def build_sent_graph(sent, train_data):
         D.add_edge('start', (i,len(sent)-1), weight=0)
     return D
 
+'''
+Summary: Calculates pronunciation of numbers not found in the dictionary in a
+    smarter way, and returns the correct pronunciation. Can only account for
+    numbers up to 99,999.
+'''
+def number_to_kana(number):
+    digits = ["ぜろ","いち","に","さん","よん","ご","ろく","なな","はち","きゅう"]
+    powers_of_ten = ["じゅう","ひゃく","せん","まん"]
+    # reverse the number and put it into a string form to iterate through
+    str_number = str(number)[::-1]
+    full_kana = ""
+    ten_power = 0
 
+    # for digit in string number
+    for digit in str_number:
+        partial_kana = ""
+        # if digit isn't 0:
+        if int(digit) > 0:
+            # then add that number's pronunciation
+            partial_kana = digits[int(digit)] + partial_kana
+
+        # if we're dealing with a power of ten
+        if ten_power > 0 and int(digit) > 0:
+            # if its an exact power of ten (10, 100, etc.)
+            # 10,000 is a special case, you do say "one ten-thousand" so it's excluded
+            if int(digit) == 1 and ten_power != 4:
+                # we don't say "one ten", just "ten" to get ten, for ex.
+                # this doesn't apply to 10,000 for some reason
+                partial_kana = powers_of_ten[ten_power - 1]
+
+            # next we'll handle special morphology cases:
+            # in the case of 6 hundred or 8 hundred:
+            elif ten_power == 2 and (int(digit) == 6 or 8):
+                partial_kana = partial_kana[:-1] + "っぴゃく"
+            # in the case of 3 hundred:
+            elif ten_power == 2 and int(digit) == 3:
+                partial_kana = partial_kana + "びゃく"
+            # in the case of 3 thousand:
+            elif ten_power == 3 and int(digit) == 3:
+                partial_kana = partial_kana + "ぜん"
+
+            # if not in a special case:
+            else:
+                # we say "two ten" to get twenty, for ex.
+                partial_kana = partial_kana + powers_of_ten[ten_power - 1]
+        # add pronunciation for this digit space onto full pronunciation
+        full_kana = partial_kana + full_kana
+        ten_power += 1
+
+    # if we didn't get anything for the full kana pronunciation
+    if full_kana == "":
+        # then the number we were given was 0
+        full_kana = digits[0]
+    print(full_kana)
+    return full_kana
+
+'''
+Summary:
+'''
 def translate(sent, D, train_data):
     Dgraph = nx.DiGraph.copy(D)
     # remove edges coming out of start
@@ -182,6 +261,9 @@ def translate(sent, D, train_data):
             output = kana + output
     return output
 
+'''
+Summary:
+'''
 def get_train_data():
     # '''create dictionary:'''
     # create a katakana/hiragana to hiragana map (dictionary):
@@ -207,11 +289,15 @@ def get_train_data():
                 train_data[kanji] = [hiragana_l, value]
     return train_data
 
+'''
+Summary: Calls other functions within the file to import training and test data,
+    find pronunciation of test sentences, and compare calculated pronunciaiton
+    with answers.
+'''
 def main():
     #import training data
     train_data = get_train_data()
 
-    '''parse test sentences:'''
     # import test data
     test_sentences = import_test_data()
 
@@ -219,9 +305,12 @@ def main():
 
     # iterate through test sentences:
     for sent, answ in test_sentences:
+        # first pass to find numbers
+        # TODO: do something here I don't know ask Jack
 
+        # build associated graph
         D = build_sent_graph(sent, train_data)
-
+        # use graph to translate (find longest path, backtrack, etc.)
         output = translate(sent, D, train_data)
 
         # compare output and answ to determine accuracy
@@ -232,8 +321,8 @@ def main():
     sent_translation.sort(key = lambda x: x[3], reverse = True)
     output_result_statistics(sent_translation)
 
-
-
+# Tegan doesn't know what this line does
 done_visual = False
+
 if __name__ == "__main__":
     main()
