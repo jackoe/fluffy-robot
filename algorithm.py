@@ -8,6 +8,7 @@ import networkx as nx
 import tabulate
 import plotly.offline as plot
 import plotly.graph_objs as go
+import re
 
 '''
 Summary: something Jack did to make it print things nicely
@@ -76,16 +77,8 @@ def parse_line(line):
     return kanji, hiragana
 
 '''
-Summary:
-'''
-def set_difference(l1, l2):
-    s1 = set(l1)
-    s2 = set(l2)
-    diff = s1.difference(s2)
-    return list(diff)
-
-'''
-Summary:
+Summary: returns the edit distance between s1 and s2.
+Penalties: insertion: 1, deletion: 1, substitution: 2
 '''
 def edit_distance(s1, s2, dp_table):
     if len(s1) == 0 or len(s2) == 0:
@@ -102,7 +95,7 @@ def edit_distance(s1, s2, dp_table):
         return result
 
 '''
-Summary: Builds and return the graph associated with a gievn test sentence, will
+Summary: Builds and return the graph associated with a given test sentence, will
     be used to run longest path on and find word boundaries later on.
 '''
 def build_sent_graph(sent, train_data):
@@ -180,13 +173,26 @@ def number_to_kana(number):
     if full_kana == "":
         # then the number we were given was 0
         full_kana = digits[0]
-    print(full_kana)
     return full_kana
+
+
+
+def number_sent_to_kana_sent(sent, train_data):
+    def number_plus_to_kana_plus(number_plus):
+        number_plus = number_plus[0]
+        if number_plus in train_data:
+            return train_data[number_plus][0][0]
+        else:
+            return number_to_kana(number_plus[:-1]) + number_plus[-1]
+
+    return re.sub("\d+.", number_plus_to_kana_plus, sent)
+
 
 '''
 Summary:
 '''
 def translate(sent, D, train_data):
+    sent = number_sent_to_kana_sent(sent, train_data)
     Dgraph = nx.DiGraph.copy(D)
     # remove edges coming out of start
     for edge in list(Dgraph.edges('start')):
