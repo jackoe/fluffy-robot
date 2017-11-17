@@ -120,11 +120,8 @@ def build_sent_graph(sent, train_data):
         D.add_edge('start', (i,len(sent)-1), weight=0)
     return D
 
-'''
-Summary: Calculates pronunciation of numbers not found in the dictionary in a
-    smarter way, and returns the correct pronunciation. Can only account for
-    numbers up to 99,999.
-'''
+
+
 def number_to_kana(number):
     digits = ["ぜろ","いち","に","さん","よん","ご","ろく","なな","はち","きゅう"]
     powers_of_ten = ["じゅう","ひゃく","せん","まん"]
@@ -192,7 +189,6 @@ def number_sent_to_kana_sent(sent, train_data):
 Summary:
 '''
 def translate(sent, D, train_data):
-    sent = number_sent_to_kana_sent(sent, train_data)
     Dgraph = nx.DiGraph.copy(D)
     # remove edges coming out of start
     for edge in list(Dgraph.edges('start')):
@@ -312,7 +308,7 @@ def main():
     # iterate through test sentences:
     for sent, answ in test_sentences:
         # first pass to find numbers
-        # TODO: do something here I don't know ask Jack
+        sent = number_sent_to_kana_sent(sent, train_data)
 
         # build associated graph
         D = build_sent_graph(sent, train_data)
