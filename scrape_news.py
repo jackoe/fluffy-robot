@@ -2,7 +2,6 @@ import urllib.request
 from bs4 import BeautifulSoup
 from functools import reduce
 import bs4
-# pip3 install beautifulsoup4
 import sys
 
 # (a, b), (c, d) -> (a+c, b + d)
