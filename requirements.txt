@@ -1,4 +1,0 @@
-networkx
-plotly
-tabulate
-beautifulsoup4
