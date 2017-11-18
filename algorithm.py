@@ -323,8 +323,6 @@ def main():
     sent_translation.sort(key = lambda x: x[3], reverse = True)
     output_result_statistics(sent_translation)
 
-# Tegan doesn't know what this line does
-done_visual = False
 
 if __name__ == "__main__":
     main()
